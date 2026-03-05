@@ -21,7 +21,7 @@ st.title("🌷 Bulblet Yield Prediction System")
 
 # -------------------------------------------------
 
-# MODEL PATH (GitHub + Streamlit Cloud compatible)
+# PATH SETTINGS (STREAMLIT CLOUD SAFE)
 
 # -------------------------------------------------
 
@@ -30,7 +30,7 @@ MODEL_DIR = BASE_DIR / "models"
 
 # -------------------------------------------------
 
-# LOAD MODEL & ENCODERS
+# LOAD MODEL FILES
 
 # -------------------------------------------------
 
@@ -38,19 +38,27 @@ MODEL_DIR = BASE_DIR / "models"
 def load_resources():
 
 ```
-model = joblib.load(MODEL_DIR / "model_dozajli_v2.pkl")
-le_species = joblib.load(MODEL_DIR / "label_encoder_tur_dozajli_v2.pkl")
-le_application = joblib.load(MODEL_DIR / "label_encoder_uyg_dozajli_v2.pkl")
-scaler = joblib.load(MODEL_DIR / "scaler_dozajli_v2.pkl")
+try:
 
-return model, le_species, le_application, scaler
+    model = joblib.load(MODEL_DIR / "model_dozajli_v2.pkl")
+    le_species = joblib.load(MODEL_DIR / "label_encoder_tur_dozajli_v2.pkl")
+    le_application = joblib.load(MODEL_DIR / "label_encoder_uyg_dozajli_v2.pkl")
+    scaler = joblib.load(MODEL_DIR / "scaler_dozajli_v2.pkl")
+
+    return model, le_species, le_application, scaler
+
+except Exception as e:
+
+    st.error("Model files could not be loaded.")
+    st.error(e)
+    st.stop()
 ```
 
 model, le_species, le_application, scaler = load_resources()
 
 # -------------------------------------------------
 
-# APPLICATION TYPE DISPLAY MAPPING
+# APPLICATION TYPE DISPLAY MAP
 
 # -------------------------------------------------
 
@@ -66,7 +74,7 @@ reverse_application_map = {v: k for k, v in application_display_map.items()}
 
 # -------------------------------------------------
 
-# SMALL-SIZED SPECIES
+# SMALL SPECIES CONSTRAINT
 
 # -------------------------------------------------
 
@@ -88,7 +96,7 @@ optimum_bacteria = 50
 
 # -------------------------------------------------
 
-# DOSE EFFECT FUNCTION
+# DOSE RESPONSE FUNCTION
 
 # -------------------------------------------------
 
@@ -130,7 +138,7 @@ X_scaled = scaler.transform(X)
 
 prediction = model.predict(X_scaled)[0]
 
-# Biological constraints
+# Biological limits
 prediction[0] = np.clip(prediction[0], 1, 3)
 
 if species in small_species:
@@ -138,7 +146,7 @@ if species in small_species:
 else:
     prediction[1] = max(prediction[1], 0.1)
 
-# Dose-response simulation
+# Dose-response adjustment
 myco_factor = dose_effect_factor(mycorrhiza, optimum_mycorrhiza)
 bact_factor = dose_effect_factor(bacteria, optimum_bacteria)
 
@@ -206,7 +214,7 @@ run_prediction = st.button("Run Prediction")
 
 # -------------------------------------------------
 
-# OUTPUT RESULTS
+# RESULTS PANEL
 
 # -------------------------------------------------
 
