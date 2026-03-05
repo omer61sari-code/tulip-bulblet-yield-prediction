@@ -21,7 +21,7 @@ st.title("🌷 Bulblet Yield Prediction System")
 
 # -------------------------------------------------
 
-# MODEL PATH
+# MODEL PATH (GitHub + Streamlit Cloud compatible)
 
 # -------------------------------------------------
 
@@ -138,7 +138,7 @@ if species in small_species:
 else:
     prediction[1] = max(prediction[1], 0.1)
 
-# Dose response
+# Dose-response simulation
 myco_factor = dose_effect_factor(mycorrhiza, optimum_mycorrhiza)
 bact_factor = dose_effect_factor(bacteria, optimum_bacteria)
 
@@ -206,7 +206,7 @@ run_prediction = st.button("Run Prediction")
 
 # -------------------------------------------------
 
-# RESULTS
+# OUTPUT RESULTS
 
 # -------------------------------------------------
 
@@ -229,7 +229,6 @@ if run_prediction:
     st.success(f"Predicted Number of Bulblets: {prediction[0]:.2f}")
     st.success(f"Predicted Bulblet Weight: {prediction[1]:.2f} g")
 
-    # Comparison table
     comparison_data = []
 
     for app_tr in le_application.classes_:
@@ -271,7 +270,6 @@ if run_prediction:
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # Recommendations
     st.subheader("Decision Support Recommendations")
 
     if mycorrhiza_dose < optimum_mycorrhiza:
@@ -287,6 +285,7 @@ if run_prediction:
         st.warning("Bacteria dose is excessively high and may reduce yield.")
 
 else:
+
     st.info("Please enter the input parameters and click 'Run Prediction'.")
 ```
 
@@ -303,4 +302,3 @@ st.caption(
 "based on literature-informed assumptions and integrated into "
 "machine learning predictions."
 )
-
