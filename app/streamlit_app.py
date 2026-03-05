@@ -21,11 +21,11 @@ st.title("🌷 Bulblet Yield Prediction System")
 
 # -------------------------------------------------
 
-# PATH SETTINGS (STREAMLIT CLOUD SAFE)
+# PATH SETTINGS
 
 # -------------------------------------------------
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(**file**).resolve().parent.parent
 MODEL_DIR = BASE_DIR / "models"
 
 # -------------------------------------------------
@@ -36,23 +36,16 @@ MODEL_DIR = BASE_DIR / "models"
 
 @st.cache_resource
 def load_resources():
-
-
 try:
-
-    model = joblib.load(MODEL_DIR / "model_dozajli_v2.pkl")
-    le_species = joblib.load(MODEL_DIR / "label_encoder_tur_dozajli_v2.pkl")
-    le_application = joblib.load(MODEL_DIR / "label_encoder_uyg_dozajli_v2.pkl")
-    scaler = joblib.load(MODEL_DIR / "scaler_dozajli_v2.pkl")
-
-    return model, le_species, le_application, scaler
-
+model = joblib.load(MODEL_DIR / "model_dozajli_v2.pkl")
+le_species = joblib.load(MODEL_DIR / "label_encoder_tur_dozajli_v2.pkl")
+le_application = joblib.load(MODEL_DIR / "label_encoder_uyg_dozajli_v2.pkl")
+scaler = joblib.load(MODEL_DIR / "scaler_dozajli_v2.pkl")
+return model, le_species, le_application, scaler
 except Exception as e:
-
-    st.error("Model files could not be loaded.")
-    st.error(e)
-    st.stop()
-
+st.error("Model files could not be loaded.")
+st.error(e)
+st.stop()
 
 model, le_species, le_application, scaler = load_resources()
 
@@ -101,10 +94,9 @@ optimum_bacteria = 50
 # -------------------------------------------------
 
 def dose_effect_factor(dose, optimum):
-
-
 deviation = abs(dose - optimum)
 
+```
 if deviation == 0:
     return 1.0
 elif deviation <= 25:
@@ -113,7 +105,7 @@ elif deviation <= 50:
     return 0.6
 else:
     return 0.5
-
+```
 
 # -------------------------------------------------
 
@@ -123,7 +115,7 @@ else:
 
 def predict(species, application_tr, circumference, weight, mycorrhiza, bacteria):
 
-
+```
 species_enc = le_species.transform([species])[0]
 application_enc = le_application.transform([application_tr])[0]
 
@@ -138,7 +130,7 @@ X_scaled = scaler.transform(X)
 
 prediction = model.predict(X_scaled)[0]
 
-# Biological limits
+# Biological constraints
 prediction[0] = np.clip(prediction[0], 1, 3)
 
 if species in small_species:
@@ -159,7 +151,7 @@ prediction[0] = np.clip(prediction[0], 1, 3)
 prediction[1] = max(prediction[1], 0.1)
 
 return prediction
-
+```
 
 # -------------------------------------------------
 
@@ -171,7 +163,7 @@ col1, col2 = st.columns([1, 2])
 
 with col1:
 
-
+```
 st.header("Input Parameters")
 
 species = st.selectbox(
@@ -210,7 +202,7 @@ bacteria_dose = st.slider(
 )
 
 run_prediction = st.button("Run Prediction")
-
+```
 
 # -------------------------------------------------
 
@@ -220,7 +212,7 @@ run_prediction = st.button("Run Prediction")
 
 with col2:
 
-
+```
 st.header("Prediction Results")
 
 if run_prediction:
@@ -295,7 +287,7 @@ if run_prediction:
 else:
 
     st.info("Please enter the input parameters and click 'Run Prediction'.")
-
+```
 
 # -------------------------------------------------
 
