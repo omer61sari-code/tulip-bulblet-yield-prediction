@@ -37,7 +37,7 @@ MODEL_DIR = BASE_DIR / "models"
 @st.cache_resource
 def load_resources():
 
-```
+
 try:
 
     model = joblib.load(MODEL_DIR / "model_dozajli_v2.pkl")
@@ -52,7 +52,7 @@ except Exception as e:
     st.error("Model files could not be loaded.")
     st.error(e)
     st.stop()
-```
+
 
 model, le_species, le_application, scaler = load_resources()
 
@@ -102,7 +102,7 @@ optimum_bacteria = 50
 
 def dose_effect_factor(dose, optimum):
 
-```
+
 deviation = abs(dose - optimum)
 
 if deviation == 0:
@@ -113,7 +113,7 @@ elif deviation <= 50:
     return 0.6
 else:
     return 0.5
-```
+
 
 # -------------------------------------------------
 
@@ -123,7 +123,7 @@ else:
 
 def predict(species, application_tr, circumference, weight, mycorrhiza, bacteria):
 
-```
+
 species_enc = le_species.transform([species])[0]
 application_enc = le_application.transform([application_tr])[0]
 
@@ -159,7 +159,7 @@ prediction[0] = np.clip(prediction[0], 1, 3)
 prediction[1] = max(prediction[1], 0.1)
 
 return prediction
-```
+
 
 # -------------------------------------------------
 
@@ -171,7 +171,7 @@ col1, col2 = st.columns([1, 2])
 
 with col1:
 
-```
+
 st.header("Input Parameters")
 
 species = st.selectbox(
@@ -210,7 +210,7 @@ bacteria_dose = st.slider(
 )
 
 run_prediction = st.button("Run Prediction")
-```
+
 
 # -------------------------------------------------
 
@@ -220,7 +220,7 @@ run_prediction = st.button("Run Prediction")
 
 with col2:
 
-```
+
 st.header("Prediction Results")
 
 if run_prediction:
@@ -295,7 +295,7 @@ if run_prediction:
 else:
 
     st.info("Please enter the input parameters and click 'Run Prediction'.")
-```
+
 
 # -------------------------------------------------
 
