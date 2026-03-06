@@ -6,7 +6,7 @@ import plotly.express as px
 from pathlib import Path
 
 # -------------------------------------------------
-# PAGE CONFIGURATION
+# PAGE CONFIG
 # -------------------------------------------------
 
 st.set_page_config(
@@ -38,7 +38,7 @@ def load_resources():
 model, le_species, le_application, scaler = load_resources()
 
 # -------------------------------------------------
-# APPLICATION MAP
+# APPLICATION DISPLAY MAP
 # -------------------------------------------------
 
 application_display_map = {
@@ -63,7 +63,7 @@ small_species = [
 ]
 
 # -------------------------------------------------
-# OPTIMUM DOSES
+# OPTIMUM DOSE
 # -------------------------------------------------
 
 optimum_mycorrhiza = 50
@@ -80,11 +80,11 @@ def dose_effect_factor(dose, optimum):
     if deviation == 0:
         return 1.0
     elif deviation <= 25:
-        return 0.9
+        return 0.8
     elif deviation <= 50:
-        return 0.75
-    else:
         return 0.6
+    else:
+        return 0.5
 
 # -------------------------------------------------
 # PREDICTION FUNCTION
@@ -106,58 +106,33 @@ def predict(species, application_tr, circumference, weight, mycorrhiza, bacteria
 
     prediction = model.predict(X_scaled)[0]
 
-    bulblet_number = float(prediction[0])
-    bulblet_weight = float(prediction[1])
+    # --------------------------------
+    # BIOLOGICAL LIMITS
+    # --------------------------------
 
-    # -----------------------------
-    # DOSE EFFECT
-    # -----------------------------
+    prediction[0] = np.clip(prediction[0], 1, 3)
+
+    if species in small_species:
+        prediction[1] = np.clip(prediction[1], 0.1, 5)
+    else:
+        prediction[1] = max(prediction[1], 0.1)
+
+    # --------------------------------
+    # DOSE RESPONSE
+    # --------------------------------
 
     myco_factor = dose_effect_factor(mycorrhiza, optimum_mycorrhiza)
     bact_factor = dose_effect_factor(bacteria, optimum_bacteria)
 
-    dose_factor = (myco_factor + bact_factor) / 2
+    combined_factor = (myco_factor + bact_factor) / 2
 
-    bulblet_number *= dose_factor
-    bulblet_weight *= dose_factor
+    prediction[0] *= combined_factor
+    prediction[1] *= combined_factor
 
-    # -----------------------------
-    # BULB SIZE EFFECT
-    # -----------------------------
+    prediction[0] = np.clip(prediction[0], 1, 3)
+    prediction[1] = max(prediction[1], 0.1)
 
-    size_factor = 1 + ((circumference - 20) / 80)
-    weight_factor = 1 + ((weight - 10) / 80)
-
-    bulblet_number *= size_factor * weight_factor
-    bulblet_weight *= size_factor * weight_factor
-
-    # -----------------------------
-    # APPLICATION EFFECT
-    # -----------------------------
-
-    application_effects = {
-        "kontrol": 1.0,
-        "2ye_bolme": 1.15,
-        "4e_bolme": 1.25,
-        "mikoriza": 1.10,
-        "bakteri": 1.08
-    }
-
-    bulblet_number *= application_effects.get(application_tr, 1)
-
-    # -----------------------------
-    # BIOLOGICAL LIMITS
-    # -----------------------------
-
-    bulblet_number = np.clip(bulblet_number, 1, 4)
-
-    if species in small_species:
-        bulblet_weight = np.clip(bulblet_weight, 0.1, 5)
-    else:
-        bulblet_weight = np.clip(bulblet_weight, 0.1, 20)
-
-    return np.array([bulblet_number, bulblet_weight])
-
+    return prediction
 
 # -------------------------------------------------
 # USER INTERFACE
@@ -213,7 +188,7 @@ with col2:
 
     if run_prediction:
 
-        n,w = predict(
+        pred = predict(
             species,
             application_tr,
             circumference,
@@ -222,14 +197,14 @@ with col2:
             bacteria
         )
 
-        st.success(f"Predicted Number of Bulblets: {n:.2f}")
-        st.success(f"Predicted Bulblet Weight: {w:.2f} g")
+        st.success(f"Predicted Number of Bulblets: {pred[0]:.2f}")
+        st.success(f"Predicted Bulblet Weight: {pred[1]:.2f} g")
 
         comparison_data = []
 
         for app_tr in le_application.classes_:
 
-            n2,w2 = predict(
+            pred_app = predict(
                 species,
                 app_tr,
                 circumference,
@@ -240,8 +215,8 @@ with col2:
 
             comparison_data.append([
                 application_display_map[app_tr],
-                round(n2,2),
-                round(w2,2)
+                round(pred_app[0],2),
+                round(pred_app[1],2)
             ])
 
         df = pd.DataFrame(
@@ -265,16 +240,14 @@ with col2:
             title="Predicted Bulblet Yield by Application Type"
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig,use_container_width=True)
 
     else:
 
-        st.info("Please enter the input parameters and click Run Prediction")
-
-# -------------------------------------------------
+        st.info("Please enter input parameters and click Run Prediction")
 
 st.markdown("---")
 
 st.caption(
-"Machine learning based prediction system for tulip bulblet production."
+"Optimum dose effects were simulated based on literature-informed assumptions."
 )
