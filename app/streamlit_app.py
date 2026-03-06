@@ -1,23 +1,9 @@
-
-### 1️⃣ Edit (kalem) butonuna bas
-
-### 2️⃣ Dosyanın içindeki **her şeyi sil**
-
-### 3️⃣ Aşağıdaki temiz kodu yapıştır
-
-Aşağıdaki kodda **Markdown işareti yok**, **indentation hatası yok**, **grafik ve öneriler var**.
-
-```python
 import streamlit as st
 import joblib
 import numpy as np
 import pandas as pd
 import plotly.express as px
 from pathlib import Path
-
-# -------------------------------------------------
-# PAGE CONFIGURATION
-# -------------------------------------------------
 
 st.set_page_config(
     page_title="Bulblet Yield Prediction System",
@@ -27,33 +13,21 @@ st.set_page_config(
 
 st.title("🌷 Bulblet Yield Prediction System")
 
-# -------------------------------------------------
-# PATH SETTINGS
-# -------------------------------------------------
-
 BASE_DIR = Path(".").resolve()
 MODEL_DIR = BASE_DIR / "models"
 
-# -------------------------------------------------
-# LOAD MODEL FILES
-# -------------------------------------------------
 
 @st.cache_resource
 def load_resources():
-
     model = joblib.load(MODEL_DIR / "model_dozajli_v2.pkl")
     le_species = joblib.load(MODEL_DIR / "label_encoder_tur_dozajli_v2.pkl")
     le_application = joblib.load(MODEL_DIR / "label_encoder_uyg_dozajli_v2.pkl")
     scaler = joblib.load(MODEL_DIR / "scaler_dozajli_v2.pkl")
-
     return model, le_species, le_application, scaler
 
 
 model, le_species, le_application, scaler = load_resources()
 
-# -------------------------------------------------
-# APPLICATION TYPE MAP
-# -------------------------------------------------
 
 application_display_map = {
     "kontrol": "Control",
@@ -65,9 +39,6 @@ application_display_map = {
 
 reverse_application_map = {v: k for k, v in application_display_map.items()}
 
-# -------------------------------------------------
-# SMALL SPECIES
-# -------------------------------------------------
 
 small_species = [
     "Tulipa cinnabarina K.perss.",
@@ -76,19 +47,12 @@ small_species = [
     "Tulipa koyuncui Eker"
 ]
 
-# -------------------------------------------------
-# OPTIMUM DOSES
-# -------------------------------------------------
 
 optimum_mycorrhiza = 50
 optimum_bacteria = 50
 
-# -------------------------------------------------
-# DOSE RESPONSE FUNCTION
-# -------------------------------------------------
 
 def dose_effect_factor(dose, optimum):
-
     deviation = abs(dose - optimum)
 
     if deviation == 0:
@@ -100,10 +64,6 @@ def dose_effect_factor(dose, optimum):
     else:
         return 0.5
 
-
-# -------------------------------------------------
-# PREDICTION FUNCTION
-# -------------------------------------------------
 
 def predict(species, application_tr, circumference, weight, mycorrhiza, bacteria):
 
@@ -142,11 +102,8 @@ def predict(species, application_tr, circumference, weight, mycorrhiza, bacteria
     return prediction
 
 
-# -------------------------------------------------
-# USER INTERFACE
-# -------------------------------------------------
-
 col1, col2 = st.columns([1, 2])
+
 
 with col1:
 
@@ -190,10 +147,6 @@ with col1:
     run_prediction = st.button("Run Prediction")
 
 
-# -------------------------------------------------
-# RESULTS
-# -------------------------------------------------
-
 with col2:
 
     st.header("Prediction Results")
@@ -233,11 +186,7 @@ with col2:
 
         df = pd.DataFrame(
             comparison_data,
-            columns=[
-                "Application Type",
-                "Bulblet Number",
-                "Bulblet Weight (g)"
-            ]
+            columns=["Application Type", "Bulblet Number", "Bulblet Weight (g)"]
         )
 
         st.subheader("Comparison Across Application Types")
