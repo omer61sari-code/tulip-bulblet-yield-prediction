@@ -5,9 +5,6 @@ import pandas as pd
 import plotly.express as px
 from pathlib import Path
 
-# -------------------------------------------------
-# PAGE CONFIGURATION
-# -------------------------------------------------
 st.set_page_config(
     page_title="Bulblet Yield Prediction System",
     page_icon="🌷",
@@ -19,6 +16,7 @@ st.title("🌷 Bulblet Yield Prediction System")
 # -------------------------------------------------
 # LOAD MODEL & ENCODERS
 # -------------------------------------------------
+
 @st.cache_resource
 def load_resources():
 
@@ -38,6 +36,7 @@ model, le_species, le_application, scaler = load_resources()
 # -------------------------------------------------
 # APPLICATION TYPE DISPLAY MAPPING
 # -------------------------------------------------
+
 application_display_map = {
     "kontrol": "Control",
     "2ye_bolme": "Division into Two",
@@ -51,6 +50,7 @@ reverse_application_map = {v: k for k, v in application_display_map.items()}
 # -------------------------------------------------
 # SMALL-SIZED SPECIES
 # -------------------------------------------------
+
 small_species = [
     "Tulipa cinnabarina K.perss.",
     "Tulipa pulchella (Regel) Baker",
@@ -61,12 +61,14 @@ small_species = [
 # -------------------------------------------------
 # OPTIMUM DOSES
 # -------------------------------------------------
+
 optimum_mycorrhiza = 50
 optimum_bacteria = 50
 
 # -------------------------------------------------
 # DOSE–RESPONSE FUNCTION
 # -------------------------------------------------
+
 def dose_effect_factor(dose, optimum):
 
     deviation = abs(dose - optimum)
@@ -84,6 +86,7 @@ def dose_effect_factor(dose, optimum):
 # -------------------------------------------------
 # PREDICTION FUNCTION
 # -------------------------------------------------
+
 def predict(species, application_tr, circumference, weight, mycorrhiza, bacteria):
 
     species_enc = le_species.transform([species])[0]
@@ -97,32 +100,49 @@ def predict(species, application_tr, circumference, weight, mycorrhiza, bacteria
 
     prediction = model.predict(X_scaled)[0]
 
-    # Biological constraints
-    prediction[0] = np.clip(prediction[0], 1, 3)
+    bulblet_number = prediction[0]
+    bulblet_weight = prediction[1]
+
+    # -------------------------------------------------
+    # BIOLOGICAL CONSTRAINTS
+    # -------------------------------------------------
+
+    bulblet_number = np.clip(bulblet_number, 1, 3)
 
     if species in small_species:
-        prediction[1] = np.clip(prediction[1], 0.1, 5.0)
+        bulblet_weight = np.clip(bulblet_weight, 0.1, 5.0)
     else:
-        prediction[1] = max(prediction[1], 0.1)
+        bulblet_weight = max(bulblet_weight, 0.1)
 
-    # Dose-response simulation
+    # -------------------------------------------------
+    # DOSE RESPONSE
+    # -------------------------------------------------
+
     myco_factor = dose_effect_factor(mycorrhiza, optimum_mycorrhiza)
     bact_factor = dose_effect_factor(bacteria, optimum_bacteria)
 
     combined_factor = (myco_factor + bact_factor) / 2
 
-    prediction[0] *= combined_factor
-    prediction[1] *= combined_factor
+    bulblet_weight = bulblet_weight * combined_factor
 
-    prediction[0] = np.clip(prediction[0], 1, 3)
-    prediction[1] = max(prediction[1], 0.1)
+    # -------------------------------------------------
+    # ADDITIONAL SIZE RESPONSE FOR BULB NUMBER
+    # -------------------------------------------------
 
-    return prediction
+    size_effect = (circumference / 20) * 0.15
+    weight_effect = (weight / 10) * 0.10
+
+    bulblet_number = bulblet_number + size_effect + weight_effect
+
+    bulblet_number = np.clip(bulblet_number, 1, 3)
+
+    return np.array([bulblet_number, bulblet_weight])
 
 
 # -------------------------------------------------
 # USER INTERFACE
 # -------------------------------------------------
+
 col1, col2 = st.columns([1, 2])
 
 with col1:
@@ -176,12 +196,12 @@ with col1:
         )
 
         st.session_state["prediction"] = prediction
-        st.session_state["inputs"] = True
 
 
 # -------------------------------------------------
 # OUTPUTS
 # -------------------------------------------------
+
 with col2:
 
     st.header("Prediction Results")
@@ -254,9 +274,6 @@ with col2:
         st.info("Please enter the input parameters and click 'Run Prediction'.")
 
 
-# -------------------------------------------------
-# FOOTNOTE
-# -------------------------------------------------
 st.markdown("---")
 
 st.caption(
